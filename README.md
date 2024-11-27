@@ -23,13 +23,13 @@ project_root/
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/your-repo-name.git
-   cd your-repo-name
+   git clone https://github.com/pringlesinghal/cs286-project.git
+   cd cs286-project
    ```
 
 2. Build and run:
    ```
-   docker-compose up --build
+   docker compose up --build
    ```
 
 3. Access the app:

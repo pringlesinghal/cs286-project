@@ -1,6 +1,3 @@
-Certainly! Here's a more concise README that focuses on the layout and essential commands:
-
-```markdown
 # Image Processing Web App
 
 A web application for uploading, cropping, and processing images.
@@ -76,6 +73,3 @@ uvicorn main:app --reload
 - Backend: FastAPI (Python)
 - Image Processing: Pillow
 - Containerization: Docker
-```
-
-This README provides a concise overview of the project structure, quick start instructions using Docker, manual setup commands, basic usage instructions, and a brief mention of the tech stack. It focuses on the essential information needed to get the project running from scratch.

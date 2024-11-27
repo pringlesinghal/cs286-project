@@ -29,12 +29,12 @@ project_root/
 
 2. Build and run:
    ```
-   docker compose up --build
+   docker compose up -d --build
    ```
 
 3. Access the app:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000
+   - Frontend: [http://localhost:3000](http://localhost:3000)
+   - Backend API: [http://localhost:8000]([http://localhost:8000)
 
 ## Manual Setup
 
@@ -59,8 +59,8 @@ uvicorn main:app --reload
 
 1. Open http://localhost:3000
 2. Upload an image
-3. Crop the image
-4. Submit for processing
+3. Crop the image (only accepts square crops)
+4. Submit for processing (to be implemented)
 5. View original and processed images
 
 ## API

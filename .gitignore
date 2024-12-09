@@ -1,2 +1,4 @@
 processed_images/
 __pycache__/
+all_data_up.pickle
+all_data.pickle

@@ -1,3 +1,6 @@
+// Remove the images at indices 3 and last 2 (or replace)!
+
+
 import React, { useState, useEffect } from 'react';
 import { Box, Paper, Typography, Tooltip } from '@mui/material';
 import { styled } from '@mui/system';
@@ -134,14 +137,37 @@ const App = () => {
     fetchThumbnails();
   }, []);
 
+  // const fetchStateData = async () => {
+  //   try {
+  //     console.log('Fetching state data:', selectedIdx, selectedDot, selectedValidIndices);
+  //     const response = await axios.get('http://localhost:8000/return_state_data', {
+  //       params: {
+  //         image_index: selectedIdx,
+  //         detail_level: selectedDot,
+  //         object_list: selectedValidIndices,
+  //       },
+  //     });
+  //     const { mask_overlayed_image, valid_object_color_tuples, invalid_objects } = response.data;
+  //     setMainImage(`data:image/png;base64,${mask_overlayed_image}`);
+  //     setValidItems(valid_object_color_tuples);
+  //     setInvalidItems(invalid_objects);
+  //   } catch (error) {
+  //     console.error('Error fetching state data:', error);
+  //   }
+  // };
+
   const fetchStateData = async () => {
     try {
       console.log('Fetching state data:', selectedIdx, selectedDot, selectedValidIndices);
+  
+      // join the valid indices with commas
+      const validIndicesStr = selectedValidIndices.length === 0 ? 'None' : selectedValidIndices.join(',');
+      
       const response = await axios.get('http://localhost:8000/return_state_data', {
         params: {
           image_index: selectedIdx,
           detail_level: selectedDot,
-          object_list: selectedValidIndices,
+          object_list: validIndicesStr,
         },
       });
       const { mask_overlayed_image, valid_object_color_tuples, invalid_objects } = response.data;
@@ -152,6 +178,7 @@ const App = () => {
       console.error('Error fetching state data:', error);
     }
   };
+  
 
   // UseEffect to fetch data after state changes
   useEffect(() => {
@@ -262,11 +289,11 @@ const App = () => {
             <TextItemPlain
               key={index}
               style={{
-                color: selectedValidIndices.includes(index) ? '#1976d2' : '#000', // Change text color if selected
+                color: '#000', // Change text color if selected
                 // borderLeft: `10px solid ${segmentationColors[index % segmentationColors.length]}`, // Add colored line
                 paddingLeft: '10px', // Adjust padding to make space for the line
                 // make the text bold if selected
-                fontWeight: selectedValidIndices.includes(index) ? 'bold' : 'normal',
+                fontWeight: 'normal',
                 // add margin to the left
                 marginLeft: '1vw',
                 marginTop: '0.75vh',

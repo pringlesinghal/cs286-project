@@ -20,6 +20,6 @@ services:
       - ./backend:/app/backend  # Ensure the backend folder is correctly mapped
       - ./backend/data:/app/backend/data  # Explicitly map the data directory
     environment:
-      - DATA_PATH=/app/backend/data/all_data.pickle  # Pass the correct data path
+      - DATA_PATH=/app/backend/data/all_data_up.pickle  # Pass the correct data path
     depends_on:
       - frontend

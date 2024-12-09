@@ -13,25 +13,12 @@ try:
 except Exception as e:
     raise RuntimeError(f"Failed to load data from {data_path}: {e}")
 
-print(type(data))
+# print(type(data))
 
-def convert_to_pil(image):
-    """
-    Ensure the image is a PIL Image.
-    """
-    if isinstance(image, np.ndarray):
-        return Image.fromarray(image)
-    return image
+# print(data[0])
 
-def return_thumbnails():
-    """
-    Return a list of thumbnail images.
-    """
-    thumbnails = []
-    for item in data:
-        pil_image = convert_to_pil(item['image'])
-        thumbnails.append(pil_image)
-    return thumbnails
-
-thumbnails = return_thumbnails()
-print([np.array(thumbnail).tolist() for thumbnail in thumbnails])
+img = data[0]['mask_data'][0]['organ']['mask']
+# load as a pil image
+#  <PIL.Image.Image image mode=L size=1024x1024 at 0x104B92B10>
+img = np.array(img).astype(bool)
+print(img.max())

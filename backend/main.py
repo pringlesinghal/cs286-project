@@ -203,7 +203,7 @@ segmentationColors = [
     (139, 69, 19)
 ]
 
-data_path = os.getenv('DATA_PATH', '/app/backend/data/all_data.pickle')
+data_path = os.getenv('DATA_PATH', '/app/backend/data/all_data_up.pickle')
 if not os.path.exists(data_path):
     raise FileNotFoundError(f"The data file at {data_path} was not found.")
 
@@ -228,11 +228,32 @@ def overlay_mask(base_image, mask_image, color_idx):
     """
     Given the base_image and the 0/1 mask, overlay the mask with the color indexed by the color_idx.
     """
+    # Convert inputs to NumPy arrays
     overlay = np.array(base_image, dtype=np.uint8)
-    mask = np.array(mask_image, dtype=np.bool_)
-    color = segmentationColors[color_idx]
-    overlay[mask] = (overlay[mask] * 0.4 + np.array(color) * 0.6).astype(np.uint8)
+    mask = np.array(mask_image).astype(bool)
+
+    if overlay.shape[:2] != mask.shape:
+        raise ValueError("Base image and mask must have the same dimensions.")
+
+    # Ensure color index is valid
+    if not (0 <= color_idx < len(segmentationColors)):
+        raise ValueError(f"Color index {color_idx} is out of bounds.")
+    
+    # Retrieve color
+    color = np.array(segmentationColors[color_idx], dtype=np.uint8)
+    
+    # Print debugging info (optional)
+    print(f'Overlay shape: {overlay.shape}')
+    print(f'Mask shape: {mask.shape}')
+    print(f'Color idx: {color_idx}')
+    print(f'Color: {color}')
+    
+    # Apply color blending
+    overlay[mask] = (overlay[mask] * 0.4 + color * 0.6).astype(np.uint8)
+    
+    # Convert back to Image
     return Image.fromarray(overlay)
+
 
 def convert_to_pil(image):
     """
@@ -333,8 +354,14 @@ async def return_thumbnails_endpoint():
 async def return_state_data_endpoint(
     image_index: int = Query(...),
     detail_level: int = Query(...),
-    object_list: List[int] = Query(None)  # Use List[int] for proper parsing
+    object_list: str = Query(...)
 ):
+    print(object_list)
+    if object_list == 'None':
+        object_list = []
+    else:
+        object_list = [int(x) for x in object_list.split(",")]
+        print(object_list)
     state = {
         "image_index": image_index,
         "detail_level": detail_level,

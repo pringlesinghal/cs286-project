@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Paper, Typography, Tooltip } from '@mui/material';
 import { styled } from '@mui/system';
+import axios from 'axios';
 
 const ImageContainer = styled(Paper)({
   width: '40vw',
@@ -15,7 +16,7 @@ const ImageContainer = styled(Paper)({
 
 const ScrollableList = styled('div')({
   width: '20vw',
-  height: '38vw',
+  height: '17vw',
   overflowY: 'scroll',
   display: 'flex',
   flexDirection: 'column',
@@ -31,6 +32,10 @@ const TextItem = styled(Typography)({
   '&:hover': {
     color: '#1976d2',
   },
+});
+
+const TextItemPlain = styled(Typography)({
+  margin: '5px 0',
 });
 
 const DotContainer = styled('div')({
@@ -107,89 +112,110 @@ const CloseButton = styled('div')({
 
 const App = () => {
   const [mainImage, setMainImage] = useState(null);
+  const [selectedIdx, setSelectedIdx] = useState(-1);
+  const [thumbnails, setThumbnails] = useState([]); 
   const [selectedDot, setSelectedDot] = useState(-1);
-  const [selectedItems, setSelectedItems] = useState([]); // Track selected items
-  const [itemList, setItemList] = useState([]); // Track selected items
+  const [selectedValidIndices, setSelectedValidIndices] = useState([]);
+  const [validItems, setValidItems] = useState([]);
+  const [invalidItems, setInvalidItems] = useState([]);
 
-  const getRandomItemList = () => {
-    const shuffled = sampleTexts.sort(() => 0.5 - Math.random());
-    let selected = shuffled.slice(0, Math.floor(Math.random() * shuffled.length));
-    return selected;
-  }
+  // Fetch thumbnails from backend
+  useEffect(() => {
+    const fetchThumbnails = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/return_thumbnails');
+        const { thumbnails } = response.data;
+        setThumbnails(thumbnails.map((base64) => `data:image/png;base64,${base64}`)); // Decode Base64
+      } catch (error) {
+        console.error('Error fetching thumbnails:', error);
+      }
+    };
 
-  const handleThumbnailClick = (image) => {
-    setMainImage(image);
-    setSelectedItems([]);
-    setSelectedDot(2);
-    setItemList(getRandomItemList());
-    console.log('Selected image:', image);
+    fetchThumbnails();
+  }, []);
+
+  const fetchStateData = async () => {
+    try {
+      console.log('Fetching state data:', selectedIdx, selectedDot, selectedValidIndices);
+      const response = await axios.get('http://localhost:8000/return_state_data', {
+        params: {
+          image_index: selectedIdx,
+          detail_level: selectedDot,
+          object_list: selectedValidIndices,
+        },
+      });
+      const { mask_overlayed_image, valid_object_color_tuples, invalid_objects } = response.data;
+      setMainImage(`data:image/png;base64,${mask_overlayed_image}`);
+      setValidItems(valid_object_color_tuples);
+      setInvalidItems(invalid_objects);
+    } catch (error) {
+      console.error('Error fetching state data:', error);
+    }
+  };
+
+  // UseEffect to fetch data after state changes
+  useEffect(() => {
+    if (selectedIdx !== -1 && selectedDot !== -1) {
+      fetchStateData();
+    }
+  }, [selectedIdx, selectedDot, selectedValidIndices]);
+
+  const handleThumbnailClick = (index) => {
+    console.log('Selected image:', index);
+    setSelectedIdx(index); // Updates state
+    setSelectedDot(2);     // Updates state
+    setSelectedValidIndices([]); // Updates state
+    // fetchStateData will run automatically after state updates
+  };
+
+  const handleCloseImage = () => {
+    setMainImage(null);
+    setSelectedIdx(-1);
+    setSelectedDot(-1);
+    setSelectedValidIndices([]);
+    setValidItems([]);
+    setInvalidItems([]);
+    // No need to fetch state data since the image is closed
   };
 
   const handleDotClick = (index) => {
-    // check if an image is selected
-    if (!mainImage) {
+    if (selectedIdx === -1) {
       console.log('Please select an image first');
       return;
     }
-    setSelectedItems([]);
     setSelectedDot(index);
-    setItemList(getRandomItemList());
-    console.log('Selected dot:', index);
+    setSelectedValidIndices([]);
+    // fetchStateData will run automatically after state updates
   };
 
   const handleItemClick = (index) => {
-    // check if an image is selected
-    if (!mainImage) {
-      console.log('Please select an image first');
-      return;
-    }
-    setSelectedItems((prevSelected) =>
+    setSelectedValidIndices((prevSelected) =>
       prevSelected.includes(index)
         ? prevSelected.filter((item) => item !== index) // Remove if already selected
         : [...prevSelected, index] // Add to selected items
     );
     console.log('Toggled item:', index);
+    // fetchStateData will run automatically after state updates
   };
 
-  const handleCloseImage = () => {
-    setSelectedDot(-1);
-    setSelectedItems([]);
-    setMainImage(null);
-    setItemList([]);
-    console.log('Closed main image');
-  };
-
-  const sampleImages = [
-    'https://via.placeholder.com/100',
-    'https://via.placeholder.com/101',
-    'https://via.placeholder.com/102',
-    'https://via.placeholder.com/103',
-    'https://via.placeholder.com/104',
-    'https://via.placeholder.com/105',
-    'https://via.placeholder.com/106',
-    'https://via.placeholder.com/107',
-    'https://via.placeholder.com/108',
-    'https://via.placeholder.com/109',
-  ];
-
-  const sampleTexts = ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5', 'Item 6', 'Item 7', 'Item 8', 'Item 9', 'Item 10'];
+  // const sampleTexts = ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5', 'Item 6', 'Item 7', 'Item 8', 'Item 9', 'Item 10'];
 
   const levels = ['Coarse', 'Mid', 'Fine'];
 
-  const segmentationColors = [
-    "#FF0000", // Red
-    "#00FF00", // Green
-    "#0000FF", // Blue
-    "#FFFF00", // Yellow
-    "#FF00FF", // Magenta
-    "#00FFFF", // Cyan
-    "#FFA500", // Orange
-    "#800080", // Purple
-    "#FFC0CB", // Pink
-    "#32CD32", // Lime
-    "#008080", // Teal
-    "#8B4513"  // Brown
-];
+//   const segmentationColors = [
+//     "#FF0000", // Red
+//     "#00FF00", // Green
+//     "#0000FF", // Blue
+//     "#FFFF00", // Yellow
+//     "#FF00FF", // Magenta
+//     "#00FFFF", // Cyan
+//     "#FFA500", // Orange
+//     "#800080", // Purple
+//     "#FFC0CB", // Pink
+//     "#32CD32", // Lime
+//     "#008080", // Teal
+//     "#8B4513"  // Brown
+// ];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
@@ -206,30 +232,51 @@ const App = () => {
         </ImageContainer>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Typography variant="h6">
-            Object Types
+            Segmented
           </Typography>
           <ScrollableList>
-          {itemList.map((text, index) => (
+          {validItems.map((tuple, index) => (
             <TextItem
               key={index}
               onClick={() => handleItemClick(index)}
               style={{
-                color: selectedItems.includes(index) ? '#1976d2' : '#000', // Change text color if selected
-                borderLeft: `10px solid ${segmentationColors[index % segmentationColors.length]}`, // Add colored line
+                color: selectedValidIndices.includes(index) ? '#1976d2' : '#000', // Change text color if selected
+                borderLeft: `10px solid ${tuple[1]}`, // Add colored line
                 paddingLeft: '10px', // Adjust padding to make space for the line
                 // make the text bold if selected
-                fontWeight: selectedItems.includes(index) ? 'bold' : 'normal',
+                fontWeight: selectedValidIndices.includes(index) ? 'bold' : 'normal',
+                // add margin to the left
+                marginLeft: '1vw',
+                marginTop: '0.75vh',
+              }}
+            >
+              {tuple[0]}
+            </TextItem>
+          ))}
+          </ScrollableList>
+          <Typography variant="h6">
+            Detected (but not Segmented)
+          </Typography>
+          <ScrollableList>
+          {invalidItems.map((text, index) => (
+            <TextItemPlain
+              key={index}
+              style={{
+                color: selectedValidIndices.includes(index) ? '#1976d2' : '#000', // Change text color if selected
+                // borderLeft: `10px solid ${segmentationColors[index % segmentationColors.length]}`, // Add colored line
+                paddingLeft: '10px', // Adjust padding to make space for the line
+                // make the text bold if selected
+                fontWeight: selectedValidIndices.includes(index) ? 'bold' : 'normal',
                 // add margin to the left
                 marginLeft: '1vw',
                 marginTop: '0.75vh',
               }}
             >
               {text}
-            </TextItem>
+            </TextItemPlain>
           ))}
           </ScrollableList>
         </Box>
-
 
         <DotContainer>
           {levels.map((label, index) => (
@@ -245,12 +292,12 @@ const App = () => {
       </Box>
 
       <ImageGrid>
-        {sampleImages.map((image, index) => (
+        {thumbnails.map((image, index) => (
           <Thumbnail
             key={index}
             src={image}
             alt={`Thumbnail ${index}`}
-            onClick={() => handleThumbnailClick(image)}
+            onClick={() => handleThumbnailClick(index)}
           />
         ))}
       </ImageGrid>

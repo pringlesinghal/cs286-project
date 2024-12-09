@@ -1,158 +1,261 @@
-import React, { useState, useCallback } from 'react';
-import Cropper from 'react-easy-crop';
-import { Button, Box, Modal, Paper, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Paper, Typography, Tooltip } from '@mui/material';
 import { styled } from '@mui/system';
-import axios from 'axios';
-
-const Input = styled('input')({
-  display: 'none',
-});
 
 const ImageContainer = styled(Paper)({
-  width: '45vw',
-  height: '45vw',
-  maxWidth: '400px',
-  maxHeight: '400px',
+  width: '40vw',
+  height: '40vw',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
+  position: 'relative',
   border: '3px dashed #ccc',
   margin: '10px',
 });
 
-const getCroppedImg = (imageSrc, pixelCrop) => {
-  const image = new Image();
-  image.src = imageSrc;
-  const canvas = document.createElement('canvas');
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
-  const ctx = canvas.getContext('2d');
+const ScrollableList = styled('div')({
+  width: '20vw',
+  height: '38vw',
+  overflowY: 'scroll',
+  display: 'flex',
+  flexDirection: 'column',
+  // alignItems: 'center',
+  border: '2px solid #ccc',
+  margin: '10px',
+});
 
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height
-  );
+const TextItem = styled(Typography)({
+  margin: '5px 0',
+  cursor: 'pointer',
+  transition: 'color 0.3s ease',
+  '&:hover': {
+    color: '#1976d2',
+  },
+});
 
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      resolve(URL.createObjectURL(blob));
-    }, 'image/jpeg');
-  });
-};
+const DotContainer = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center', // Center vertically
+  // alignItems: 'center', // Center horizontally
+  margin: '0 10px',
+  // height: '100%', // Ensure it takes up the full height of the parent container
+  height: '40vw',
+});
 
-function App() {
-  const [image, setImage] = useState(null);
-  const [croppedImage, setCroppedImage] = useState(null);
-  const [processedImage, setProcessedImage] = useState(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [modalOpen, setModalOpen] = useState(false);
 
-  const onCropComplete = useCallback(async (_, croppedAreaPixels) => {
-    if (image) {
-      const croppedImage = await getCroppedImg(image, croppedAreaPixels);
-      setCroppedImage(croppedImage);
-    }
-  }, [image]);
+const DotWrapper = styled('div')({
+  display: 'flex',
+  alignItems: 'center',
+  margin: '10px 0',
+});
 
-  const handleFileChange = (event) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImage(e.target.result);
-        setModalOpen(true);
-        setProcessedImage(null); // Reset the processed image
-        setCroppedImage(null); // Reset the cropped image
-      };
-      reader.readAsDataURL(event.target.files[0]);
-    }
+const Dot = styled('div')(({ selected }) => ({
+  width: '20px',
+  height: '20px',
+  borderRadius: '50%',
+  backgroundColor: selected ? '#1976d2' : '#ccc',
+  marginRight: '10px',
+  cursor: 'pointer',
+  transition: 'background-color 0.3s ease',
+}));
+
+const LevelLabel = styled(Typography)({
+  fontSize: '14px',
+  color: '#666',
+  fontWeight: '500',
+});
+
+const ImageGrid = styled('div')({
+  display: 'flex',
+  justifyContent: 'flex-start',
+  alignItems: 'center',
+  marginTop: '20px',
+  width: '80vw',
+  overflowX: 'scroll',
+  whiteSpace: 'nowrap',
+});
+
+const Thumbnail = styled('img')({
+  width: '10vw',
+  height: '10vw',
+  margin: '5px',
+  cursor: 'pointer',
+  objectFit: 'cover',
+  border: '2px solid transparent',
+  transition: 'border-color 0.3s ease',
+  '&:hover': {
+    borderColor: '#1976d2',
+  },
+});
+
+const CloseButton = styled('div')({
+  position: 'absolute',
+  top: '10px',
+  right: '10px',
+  cursor: 'pointer',
+  backgroundColor: '#f5f5f5',
+  borderRadius: '50%',
+  padding: '5px',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  '&:hover': {
+    backgroundColor: '#e0e0e0',
+  },
+});
+
+const App = () => {
+  const [mainImage, setMainImage] = useState(null);
+  const [selectedDot, setSelectedDot] = useState(-1);
+  const [selectedItems, setSelectedItems] = useState([]); // Track selected items
+  const [itemList, setItemList] = useState([]); // Track selected items
+
+  const getRandomItemList = () => {
+    const shuffled = sampleTexts.sort(() => 0.5 - Math.random());
+    let selected = shuffled.slice(0, Math.floor(Math.random() * shuffled.length));
+    return selected;
+  }
+
+  const handleThumbnailClick = (image) => {
+    setMainImage(image);
+    setSelectedItems([]);
+    setSelectedDot(2);
+    setItemList(getRandomItemList());
+    console.log('Selected image:', image);
   };
 
-  const handleSubmit = () => {
-    setModalOpen(false);
-    // Send the cropped image to the backend for processing
-    sendImageToBackend(croppedImage);
-  };
-
-  const sendImageToBackend = async (imageUrl) => {
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const formData = new FormData();
-      formData.append('file', blob, 'cropped_image.jpg');
-
-      const result = await axios.post('http://localhost:8000/process_image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      setProcessedImage(result.data.processed_image_url);
-    } catch (error) {
-      console.error('Error processing image:', error);
+  const handleDotClick = (index) => {
+    // check if an image is selected
+    if (!mainImage) {
+      console.log('Please select an image first');
+      return;
     }
+    setSelectedItems([]);
+    setSelectedDot(index);
+    setItemList(getRandomItemList());
+    console.log('Selected dot:', index);
   };
+
+  const handleItemClick = (index) => {
+    // check if an image is selected
+    if (!mainImage) {
+      console.log('Please select an image first');
+      return;
+    }
+    setSelectedItems((prevSelected) =>
+      prevSelected.includes(index)
+        ? prevSelected.filter((item) => item !== index) // Remove if already selected
+        : [...prevSelected, index] // Add to selected items
+    );
+    console.log('Toggled item:', index);
+  };
+
+  const handleCloseImage = () => {
+    setSelectedDot(-1);
+    setSelectedItems([]);
+    setMainImage(null);
+    setItemList([]);
+    console.log('Closed main image');
+  };
+
+  const sampleImages = [
+    'https://via.placeholder.com/100',
+    'https://via.placeholder.com/101',
+    'https://via.placeholder.com/102',
+    'https://via.placeholder.com/103',
+    'https://via.placeholder.com/104',
+    'https://via.placeholder.com/105',
+    'https://via.placeholder.com/106',
+    'https://via.placeholder.com/107',
+    'https://via.placeholder.com/108',
+    'https://via.placeholder.com/109',
+  ];
+
+  const sampleTexts = ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5', 'Item 6', 'Item 7', 'Item 8', 'Item 9', 'Item 10'];
+
+  const levels = ['Coarse', 'Mid', 'Fine'];
+
+  const segmentationColors = [
+    "#FF0000", // Red
+    "#00FF00", // Green
+    "#0000FF", // Blue
+    "#FFFF00", // Yellow
+    "#FF00FF", // Magenta
+    "#00FFFF", // Cyan
+    "#FFA500", // Orange
+    "#800080", // Purple
+    "#FFC0CB", // Pink
+    "#32CD32", // Lime
+    "#008080", // Teal
+    "#8B4513"  // Brown
+];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-        <ImageContainer elevation={3}>
-          {croppedImage ? (
-            <img src={croppedImage} alt="Cropped" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <ImageContainer>
+          {mainImage ? (
+            <>
+              <img src={mainImage} alt="Selected" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <CloseButton onClick={handleCloseImage}>X</CloseButton>
+            </>
           ) : (
-            <Typography variant="h6" color="textSecondary">Cropped Image</Typography>
+            <Typography variant="h6" color="textSecondary">Please Select an Image Below</Typography>
           )}
         </ImageContainer>
-        <ImageContainer elevation={3}>
-          {processedImage ? (
-            <img src={processedImage} alt="Processed" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <Typography variant="h6" color="textSecondary">Processed Image</Typography>
-          )}
-        </ImageContainer>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography variant="h6">
+            Object Types
+          </Typography>
+          <ScrollableList>
+          {itemList.map((text, index) => (
+            <TextItem
+              key={index}
+              onClick={() => handleItemClick(index)}
+              style={{
+                color: selectedItems.includes(index) ? '#1976d2' : '#000', // Change text color if selected
+                borderLeft: `10px solid ${segmentationColors[index % segmentationColors.length]}`, // Add colored line
+                paddingLeft: '10px', // Adjust padding to make space for the line
+                // make the text bold if selected
+                fontWeight: selectedItems.includes(index) ? 'bold' : 'normal',
+                // add margin to the left
+                marginLeft: '1vw',
+                marginTop: '0.75vh',
+              }}
+            >
+              {text}
+            </TextItem>
+          ))}
+          </ScrollableList>
+        </Box>
+
+
+        <DotContainer>
+          {levels.map((label, index) => (
+            <DotWrapper key={index}>
+              <Dot
+                selected={selectedDot === index}
+                onClick={() => handleDotClick(index)}
+              />
+              <LevelLabel>{label}</LevelLabel>
+            </DotWrapper>
+          ))}
+        </DotContainer>
       </Box>
 
-      <label htmlFor="upload-button">
-        <Input accept="image/*" id="upload-button" type="file" onChange={handleFileChange} />
-        <Button variant="contained" component="span" sx={{ mt: 2 }}>
-          Upload Image
-        </Button>
-      </label>
-
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          bgcolor: 'background.paper',
-          boxShadow: 24,
-          p: 4
-        }}>
-          <div style={{ height: 300, position: 'relative' }}>
-            <Cropper
-              image={image}
-              crop={crop}
-              zoom={zoom}
-              aspect={1}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={onCropComplete}
-            />
-          </div>
-          <Button onClick={handleSubmit} variant="contained" sx={{ mt: 2 }}>
-            Submit
-          </Button>
-        </Box>
-      </Modal>
+      <ImageGrid>
+        {sampleImages.map((image, index) => (
+          <Thumbnail
+            key={index}
+            src={image}
+            alt={`Thumbnail ${index}`}
+            onClick={() => handleThumbnailClick(image)}
+          />
+        ))}
+      </ImageGrid>
     </Box>
   );
-}
+};
 
 export default App;

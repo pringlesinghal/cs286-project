@@ -15,7 +15,8 @@
     "react-easy-crop": "^5.1.0",
     "react-image-crop": "^11.0.7",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "@mui/icons-material": "^5.14.4"
   },
   "scripts": {
     "start": "react-scripts start",

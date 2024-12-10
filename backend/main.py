@@ -1,177 +1,3 @@
-# from fastapi import FastAPI, File, UploadFile
-# from fastapi.middleware.cors import CORSMiddleware
-# from fastapi.staticfiles import StaticFiles
-# from PIL import Image
-# import io
-# import os
-# import time
-# import numpy as np
-# import pickle
-
-# segmentationColors = [
-#     "#FF0000",
-#     "#00FF00",
-#     "#0000FF",
-#     "#FFFF00",
-#     "#FF00FF",
-#     "#00FFFF",
-#     "#FFA500",
-#     "#800080",
-#     "#FFC0CB",
-#     "#32CD32",
-#     "#008080",
-#     "#8B4513"
-# ]
-
-
-
-# """
-#     data = [
-#         {
-#             image: np.array, --> will be processed into a PIL image
-#             mask_data: {
-#                 hierarchy_index (int): {
-#                     object_type (string): {
-#                         mask: np.array, --> will be processed into a PIL image
-#                         valid: boolean,
-#                     }
-#                 }
-#             }
-#         },
-#     ]
-# """
-
-# data_path = '/Users/mhamzaerol/Desktop/Stanford/projects/cs286-project/all_data.pickle'
-# data = pickle.load(open(data_path, 'rb'))
-
-# app = FastAPI()
-
-# # Create directories if they don't exist
-# # os.makedirs("processed_images", exist_ok=True)
-
-# # Mount the static directory for processed images
-# # app.mount("/processed_images", StaticFiles(directory="processed_images"), name="processed_images")
-
-# # Add CORS middleware
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["http://localhost:3000"],  # Adjust this if your frontend URL is different
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-# # @app.post("/process_image")
-# # async def process_image(file: UploadFile = File(...)):
-# #     contents = await file.read()
-# #     image = Image.open(io.BytesIO(contents))
-    
-# #     # Process the image here
-# #     # For example, let's just create a grayscale version
-# #     processed_image = image.convert('L')
-    
-# #     # Generate a unique filename using a timestamp
-# #     timestamp = int(time.time() * 1000)
-# #     filename = f"processed_image_{timestamp}.jpg"
-# #     processed_image_path = f"processed_images/{filename}"
-    
-# #     # Save the processed image
-# #     processed_image.save(processed_image_path)
-    
-# #     # Return the URL of the processed image
-# #     return {"processed_image_url": f"http://localhost:8000/processed_images/{filename}"}
-
-
-# # def overlay_masks(image, masks, colors):
-# #     overlay = image.copy()
-# #     overlay = np.array(overlay, dtype=np.uint8)
-# #     for mask, color in zip(masks, colors):
-# #         overlay[mask > 0] = (overlay[mask > 0] * 0.4 + np.array(color) * 0.6).astype(np.uint8)
-# #     return Image.fromarray(overlay)
-
-# def overlay_mask(base_image, mask_image, color_idx):
-#     """
-#         Given the base_image and the 0/1 mask, overlay the mask with the color indexed by the color_idx.
-#     """
-#     overlay = base_image.copy()
-#     overlay = np.array(overlay, dtype=np.uint8)
-#     color = segmentationColors[color_idx]
-#     overlay[mask_image > 0] = (overlay[mask_image > 0] * 0.4 + np.array(color) * 0.6).astype(np.uint8)
-#     return Image.fromarray(overlay)
-
-# async def return_thumbnails():
-#     """
-#         it should return:
-#         [
-#             thumbnail_image,
-#             ...
-#         ]
-#     """
-#     return [x['image'] for x in data] # TODO: in case the image is not PIL, convert to PIL
-
-# async def return_state_data(state):
-#     """
-#         state is a dictionary that should contain:
-#         {
-#             'image_index': ...,
-#             'detail_level': ...,
-#             'object_list': [
-#                 '...',
-#             ]
-#         }
-#         the return should be in the following format:
-#         {
-#             'mask_overlayed_image': ...,
-#             'valid_object_color_tuples': [
-#                 (..., ...),
-#             ],
-#             'invalid_objects': [
-#                 ...
-#             ]
-#         }
-#     """
-#     image_data = data[state['image_index']]
-#     response = {
-#         'mask_overlayed_image': image_data['image'],
-#         'valid_object_color_tuples': [],
-#         'invalid_objects': []
-#     }
-#     for mask_data in image_data['mask_data'][state['detail_level']]:
-#         """
-#         object_type (string): {
-#             mask: np.array, --> will be processed into a PIL image
-#             valid: boolean,
-#         }
-#         """
-#         for object_type, mask_info in mask_data.items():
-#             if mask_info['valid']:
-#                 idx = len(response['valid_object_color_tuples'])
-#                 response['mask_overlayed_image'] = overlay_mask(response['mask_overlayed_image'], mask_info['mask'], idx)
-#                 response['valid_object_color_tuples'].append((
-#                     object_type, idx
-#                 ))
-#             else:
-#                 response["invalid_objects"].append(object_type)
-#         return response
-
-# @app.get("/return_thumbnails")
-# async def return_thumbnails_endpoint():
-#     thumbnails = await return_thumbnails()
-#     return [thumbnail.tolist() for thumbnail in thumbnails]  # Convert to list if using NumPy arrays
-
-# @app.post("/return_state_data")
-# async def return_state_data_endpoint(state: dict):
-#     response = await return_state_data(state)
-#     return response
-
-# @app.get("/")
-# async def root():
-#     return {"message": "API is running. Available endpoints: /process_image"}
-
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
-
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -277,20 +103,6 @@ def rgb_to_hex(rgb):
     """Convert an RGB tuple to a HEX string."""
     return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
 
-#     data = [
-#         {
-#             image: np.array, --> will be processed into a PIL image
-#             mask_data: {
-#                 hierarchy_index (int): {
-#                     object_type (string): {
-#                         mask: np.array, --> will be processed into a PIL image
-#                         valid: boolean,
-#                     }
-#                 }
-#             }
-#         },
-#     ]
-
 async def return_state_data(state):
     print(state)
     """
@@ -337,19 +149,6 @@ async def return_thumbnails_endpoint():
         encoded_images.append(base64_str)
     return JSONResponse(content={"thumbnails": encoded_images})
 
-# @app.get("/return_state_data")
-# async def return_state_data_endpoint(state: dict):
-#     response = await return_state_data(state)
-#     return response
-
-# @app.get("/return_state_data")
-# async def return_state_data_endpoint(state: dict = None):
-#     # Example of extracting state from query if necessary
-#     if state is None:
-#         return {"error": "State parameter is missing"}
-#     response = await return_state_data(state)
-#     return response
-
 @app.get("/return_state_data")
 async def return_state_data_endpoint(
     image_index: int = Query(...),
@@ -373,7 +172,6 @@ async def return_state_data_endpoint(
 
 @app.get("/")
 async def root():
-    # return {"message": "API is running. Available endpoints: /return_thumbnails, /return_state_data"}
     return data
 
 if __name__ == "__main__":

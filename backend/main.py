@@ -12,6 +12,7 @@ from io import BytesIO
 from fastapi.responses import JSONResponse
 from fastapi import Query
 from typing import List
+import gdown
 
 
 segmentationColors = [
@@ -31,7 +32,11 @@ segmentationColors = [
 
 data_path = os.getenv('DATA_PATH', '/app/backend/data/all_data_up.pickle')
 if not os.path.exists(data_path):
-    raise FileNotFoundError(f"The data file at {data_path} was not found.")
+    # raise FileNotFoundError(f"The data file at {data_path} was not found.")
+    url = os.getenv('DATA_URL')
+    file_id = url.split('/')[-2]
+    direct_link = f"https://drive.google.com/uc?id={file_id}"
+    gdown.download(direct_link, data_path, quiet=False)
 
 try:
     with open(data_path, 'rb') as f:

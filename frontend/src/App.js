@@ -1,6 +1,3 @@
-// Remove the images at indices 3 and last 2 (or replace)!
-
-
 import React, { useState, useEffect } from 'react';
 import { Box, Paper, Typography, Tooltip } from '@mui/material';
 import { styled } from '@mui/system';
@@ -131,30 +128,14 @@ const App = () => {
         setThumbnails(thumbnails.map((base64) => `data:image/png;base64,${base64}`)); // Decode Base64
       } catch (error) {
         console.error('Error fetching thumbnails:', error);
+        // retry in 1 second
+        console.log('Retrying in 1 second...');
+        setTimeout(fetchThumbnails, 1000);
       }
     };
 
     fetchThumbnails();
   }, []);
-
-  // const fetchStateData = async () => {
-  //   try {
-  //     console.log('Fetching state data:', selectedIdx, selectedDot, selectedValidIndices);
-  //     const response = await axios.get('http://localhost:8000/return_state_data', {
-  //       params: {
-  //         image_index: selectedIdx,
-  //         detail_level: selectedDot,
-  //         object_list: selectedValidIndices,
-  //       },
-  //     });
-  //     const { mask_overlayed_image, valid_object_color_tuples, invalid_objects } = response.data;
-  //     setMainImage(`data:image/png;base64,${mask_overlayed_image}`);
-  //     setValidItems(valid_object_color_tuples);
-  //     setInvalidItems(invalid_objects);
-  //   } catch (error) {
-  //     console.error('Error fetching state data:', error);
-  //   }
-  // };
 
   const fetchStateData = async () => {
     try {
@@ -225,24 +206,7 @@ const App = () => {
     // fetchStateData will run automatically after state updates
   };
 
-  // const sampleTexts = ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5', 'Item 6', 'Item 7', 'Item 8', 'Item 9', 'Item 10'];
-
   const levels = ['Coarse', 'Mid', 'Fine'];
-
-//   const segmentationColors = [
-//     "#FF0000", // Red
-//     "#00FF00", // Green
-//     "#0000FF", // Blue
-//     "#FFFF00", // Yellow
-//     "#FF00FF", // Magenta
-//     "#00FFFF", // Cyan
-//     "#FFA500", // Orange
-//     "#800080", // Purple
-//     "#FFC0CB", // Pink
-//     "#32CD32", // Lime
-//     "#008080", // Teal
-//     "#8B4513"  // Brown
-// ];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>

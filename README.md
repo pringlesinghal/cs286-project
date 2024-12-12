@@ -1,6 +1,12 @@
-# Image Processing Web App
+# Automatic Medical Segmentation from VLM-Guided Detection
 
-A web application for uploading, cropping, and processing images.
+## Supplementary Material
+We include supplementary material as a [zip file](Supplementary.zip) which contains the VQA prompts, ontology serialization and evaluation logs on test data.
+
+## Project Description
+Biomedical image segmentation remains a laborious task despite advancements in image segmentation models because the process of image analysis and generating segmentation masks continue to be two separate processes that need to be manually connected with expert input. We propose to build an agentic system that merges these workflows to create an end-to-end image analysis and segmentation model. Our system only takes a medical image as input and utilizes Gemini Flash along with a predefined medical ontology to create image descriptions at multiple granularity levels and synthesizes corresponding masks with BiomedParse. We critically evaluate the performance of different components of our system as well as the whole pipeline and show strong performance on diverse imaging modalities and anatomical regions. We believe that our system has the potential to speed up clinical workflows and improve medical education by providing more insights into medical images faster. We also build a full-stack application demo of our system. Our application code is available at [https://github.com/pringlesinghal/cs286-project](https://github.com/pringlesinghal/cs286-project) and a demo is hosted at [https://mhamzaerol-vlm-guided-auto-medical-segmentation.hf.space/](https://mhamzaerol-vlm-guided-auto-medical-segmentation.hf.space/)
+
+
 
 ## Project Structure
 
